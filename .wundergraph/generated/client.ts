@@ -1,4 +1,4 @@
-import { MessagesResponse, AddMessageInput, AddMessageResponse } from "./models";
+import { AddMessageInput, AddMessageResponse, MessagesResponse } from "./models";
 
 export type Response<T> =
 	| ResponseOK<T>
@@ -98,9 +98,9 @@ export class Client {
 		this.logoutCallback = cb;
 	}
 	private readonly baseURL: string = "http://localhost:9991";
-	private readonly applicationHash: string = "77ec7296";
+	private readonly applicationHash: string = "55002fde";
 	private readonly applicationPath: string = "api/main";
-	private readonly sdkVersion: string = "0.22.0";
+	private readonly sdkVersion: string = "0.23.0";
 	private csrfToken: string | undefined;
 	private user: User | undefined;
 	private userListener: UserListener | undefined;
