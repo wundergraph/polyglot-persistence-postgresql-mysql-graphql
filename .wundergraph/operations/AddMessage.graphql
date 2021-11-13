@@ -1,4 +1,4 @@
-mutation AddMessage (
+mutation (
     $email: String! @fromClaim(name: EMAIL)
     $name: String! @fromClaim(name: NAME)
     $message: String!
@@ -7,4 +7,3 @@ mutation AddMessage (
         id
         message
     }
-}
