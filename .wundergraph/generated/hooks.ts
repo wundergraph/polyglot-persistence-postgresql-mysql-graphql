@@ -56,7 +56,7 @@ const Query = <R extends {}, I extends {}>(
 		if (!initialized) {
 			return;
 		}
-		if (internalOptions.requiresAuthentication && user === undefined) {
+		if (internalOptions.requiresAuthentication && !user) {
 			setResponse({ status: "requiresAuthentication" });
 			return;
 		}
@@ -109,26 +109,29 @@ const Mutation = <R extends {}, I extends {}>(
 	const { user, setRefetchMountedQueries } = useWunderGraph();
 	const [_options] = useState<MutateRequestOptions<I> | undefined>(options);
 	const [response, setResponse] = useState<Response<R>>({ status: "none" });
-	const mutate = useCallback(async (options?: MutateRequestOptions<I>) => {
-		if (internalOptions.requiresAuthentication && user === undefined) {
-			setResponse({ status: "requiresAuthentication" });
-			return;
-		}
-		const combinedOptions: MutateRequestOptions<I> = {
-			refetchMountedQueriesOnSuccess:
-				options !== undefined && options.refetchMountedQueriesOnSuccess !== undefined
-					? options.refetchMountedQueriesOnSuccess
-					: _options?.refetchMountedQueriesOnSuccess,
-			input: options !== undefined && options.input !== undefined ? options.input : _options?.input,
-			abortSignal:
-				options !== undefined && options.abortSignal !== undefined ? options.abortSignal : _options?.abortSignal,
-		};
-		const result = await promiseFactory(combinedOptions);
-		setResponse(result);
-		if (result.status === "ok" && combinedOptions.refetchMountedQueriesOnSuccess === true) {
-			setRefetchMountedQueries(new Date());
-		}
-	}, []);
+	const mutate = useCallback(
+		async (options?: MutateRequestOptions<I>) => {
+			if (internalOptions.requiresAuthentication && !user) {
+				setResponse({ status: "requiresAuthentication" });
+				return;
+			}
+			const combinedOptions: MutateRequestOptions<I> = {
+				refetchMountedQueriesOnSuccess:
+					options !== undefined && options.refetchMountedQueriesOnSuccess !== undefined
+						? options.refetchMountedQueriesOnSuccess
+						: _options?.refetchMountedQueriesOnSuccess,
+				input: options !== undefined && options.input !== undefined ? options.input : _options?.input,
+				abortSignal:
+					options !== undefined && options.abortSignal !== undefined ? options.abortSignal : _options?.abortSignal,
+			};
+			const result = await promiseFactory(combinedOptions);
+			setResponse(result);
+			if (result.status === "ok" && combinedOptions.refetchMountedQueriesOnSuccess === true) {
+				setRefetchMountedQueries(new Date());
+			}
+		},
+		[user]
+	);
 	return {
 		response,
 		mutate,
@@ -140,10 +143,10 @@ const Subscription = <R, I>(
 	internalOptions: InternalOptions,
 	options?: SubscriptionRequestOptions<I>
 ) => {
+	const optionsJSON = JSON.stringify(options);
 	const { user, initialized, refetchMountedQueries } = useWunderGraph();
 	const [_options, _setOptions] = useState<RequestOptions<I> | undefined>(options);
 	const [response, setResponse] = useState<Response<R>>({ status: "loading" });
-	const [key, setKey] = useState<string>("");
 	const [lastInit, setLastInit] = useState<boolean | undefined>();
 	const computedInit = useMemo<boolean>(() => {
 		if (lastInit === undefined) {
@@ -158,20 +161,15 @@ const Subscription = <R, I>(
 			return true;
 		}
 		return lastInit;
-	}, [initialized, lastInit, options]);
+	}, [initialized, lastInit, optionsJSON]);
 	useEffect(() => {
-		const nextKey = JSON.stringify({ options });
-		if (nextKey === key) {
-			return;
-		}
-		setKey(nextKey);
 		_setOptions(options);
-	}, [options]);
+	}, [optionsJSON]);
 	useEffect(() => {
 		if (!computedInit) {
 			return;
 		}
-		if (internalOptions.requiresAuthentication && user === undefined) {
+		if (internalOptions.requiresAuthentication && !user) {
 			setResponse({ status: "requiresAuthentication" });
 			return;
 		}
@@ -204,7 +202,7 @@ export const useQuery = {
 export const useMutation = {
 	AddMessage: (options: MutateRequestOptions<AddMessageInput>) => {
 		const { client } = useWunderGraph();
-		return Mutation(client.mutation.AddMessage, { requiresAuthentication: false }, options);
+		return Mutation(client.mutation.AddMessage, { requiresAuthentication: true }, options);
 	},
 };
 

@@ -1,4 +1,7 @@
-import { MessagesResponse, AddMessageInput, AddMessageResponse } from "./models";
+import { AddMessageInput, AddMessageResponse, MessagesResponse } from "./models";
+
+export const WUNDERGRAPH_S3_ENABLED = false;
+export const WUNDERGRAPH_AUTH_ENABLED = true;
 
 export type Response<T> =
 	| ResponseOK<T>
@@ -44,7 +47,6 @@ export interface Error {
 export interface None {
 	status: "none";
 }
-
 interface FetchConfig {
 	method: "GET" | "POST";
 	path: string;
@@ -72,7 +74,7 @@ export interface SubscriptionRequestOptions<Input = never> {
 	stopOnWindowBlur?: boolean;
 }
 
-export type UserListener = (user: User | undefined) => void;
+export type UserListener = (user: User | null) => void;
 
 export interface User {
 	provider: string;
@@ -87,35 +89,56 @@ export interface User {
 	user_id: string;
 	avatar_url: string;
 	location: string;
+	roles: string[];
+}
+
+export interface ClientConfig {
+	baseURL?: string;
+	extraHeaders?: HeadersInit;
+}
+
+export enum AuthProviderId {
+	"github" = "github",
+}
+
+export interface AuthProvider {
+	id: AuthProviderId;
+	login: (redirectURI?: string) => void;
 }
 
 export class Client {
-	constructor(baseURL?: string) {
-		this.baseURL = baseURL || this.baseURL;
+	constructor(config?: ClientConfig) {
+		this.baseURL = config?.baseURL || this.baseURL;
+		this.extraHeaders = config?.extraHeaders;
+		this.user = null;
 	}
 	private logoutCallback: undefined | (() => void);
 	public setLogoutCallback(cb: () => void) {
 		this.logoutCallback = cb;
 	}
+	public setExtraHeaders = (headers: HeadersInit) => {
+		this.extraHeaders = headers;
+	};
+	private extraHeaders?: HeadersInit;
 	private readonly baseURL: string = "http://localhost:9991";
-	private readonly applicationHash: string = "77ec7296";
+	private readonly applicationHash: string = "fcd0c69f";
 	private readonly applicationPath: string = "api/main";
-	private readonly sdkVersion: string = "0.22.0";
+	private readonly sdkVersion: string = "0.39.0";
 	private csrfToken: string | undefined;
-	private user: User | undefined;
+	private user: User | null;
 	private userListener: UserListener | undefined;
 	public setUserListener = (listener: UserListener) => {
 		this.userListener = listener;
 	};
-	private setUser = (user: User | undefined) => {
+	private setUser = (user: User | null) => {
 		if (
-			(user === undefined && this.user !== undefined) ||
-			(user !== undefined && this.user === undefined) ||
+			(user === null && this.user !== null) ||
+			(user !== null && this.user === null) ||
 			JSON.stringify(user) !== JSON.stringify(this.user)
 		) {
 			this.user = user;
 			if (this.userListener !== undefined) {
-				this.userListener(user);
+				this.userListener(this.user);
 			}
 		}
 	};
@@ -161,8 +184,8 @@ export class Client {
 			const params =
 				fetchConfig.method !== "POST"
 					? this.queryString({
-							v: fetchConfig.input,
-							h: this.applicationHash,
+							wg_variables: fetchConfig.input,
+							wg_api_hash: this.applicationHash,
 					  })
 					: "";
 			if (fetchConfig.method === "POST" && this.csrfToken === undefined) {
@@ -173,6 +196,7 @@ export class Client {
 				this.csrfToken = await res.text();
 			}
 			const headers: Headers = new Headers({
+				...this.extraHeaders,
 				Accept: "application/json",
 				"WG-SDK-Version": this.sdkVersion,
 			});
@@ -197,7 +221,7 @@ export class Client {
 				status: "ok",
 				body: data,
 			};
-		} catch (e) {
+		} catch (e: any) {
 			return {
 				status: "error",
 				message: e,
@@ -232,7 +256,7 @@ export class Client {
 					inflight.forEach((cb) => cb.reject("unauthorized"));
 					this.fetchUser();
 				}
-			} catch (e) {
+			} catch (e: any) {
 				const inflight = this.inflight[key];
 				delete this.inflight[key];
 				inflight.forEach((cb) => cb.reject(e));
@@ -243,13 +267,14 @@ export class Client {
 		(async () => {
 			try {
 				const params = this.queryString({
-					v: fetchConfig.input,
-					live: fetchConfig.liveQuery === true ? true : undefined,
+					wg_variables: fetchConfig.input,
+					wg_live: fetchConfig.liveQuery === true ? true : undefined,
 				});
 				const response = await fetch(
 					this.baseURL + "/" + this.applicationPath + "/operations/" + fetchConfig.path + params,
 					{
 						headers: {
+							...this.extraHeaders,
 							"Content-Type": "application/json",
 							"WG-SDK-Version": this.sdkVersion,
 						},
@@ -282,7 +307,7 @@ export class Client {
 						message = "";
 					}
 				}
-			} catch (e) {
+			} catch (e: any) {
 				cb({
 					status: "error",
 					message: e,
@@ -307,14 +332,15 @@ export class Client {
 			.join("&");
 		return query === "" ? query : "?" + query;
 	};
-	public fetchUser = async (abortSignal?: AbortSignal): Promise<User | undefined> => {
-		const response = await fetch(this.baseURL + "/" + this.applicationPath + "/auth/cookie/user", {
+	public fetchUser = async (revalidate?: boolean): Promise<User | null> => {
+		const revalidateTrailer = revalidate === undefined ? "" : "?revalidate=true";
+		const response = await fetch(this.baseURL + "/" + this.applicationPath + "/auth/cookie/user" + revalidateTrailer, {
 			headers: {
+				...this.extraHeaders,
 				"Content-Type": "application/json",
 				"WG-SDK-Version": this.sdkVersion,
 			},
 			method: "GET",
-			signal: abortSignal,
 			credentials: "include",
 			mode: "cors",
 		});
@@ -323,17 +349,24 @@ export class Client {
 			this.setUser(user);
 			return this.user;
 		}
-		this.setUser(undefined);
-		return undefined;
+		this.setUser(null);
+		return null;
 	};
-	public login = {
-		github: (redirectURI?: string) => {
-			this.startLogin("github", redirectURI);
+	public login: Record<AuthProviderId, AuthProvider["login"]> = {
+		github: (redirectURI?: string): void => {
+			this.startLogin(AuthProviderId.github, redirectURI);
 		},
 	};
+	public authProviders: Array<AuthProvider> = [
+		{
+			id: AuthProviderId.github,
+			login: this.login[AuthProviderId.github],
+		},
+	];
 	public logout = async (): Promise<boolean> => {
 		const response = await fetch(this.baseURL + "/" + this.applicationPath + "/auth/cookie/user/logout", {
 			headers: {
+				...this.extraHeaders,
 				"Content-Type": "application/json",
 				"WG-SDK-Version": this.sdkVersion,
 			},
@@ -341,13 +374,13 @@ export class Client {
 			credentials: "include",
 			mode: "cors",
 		});
-		this.setUser(undefined);
+		this.setUser(null);
 		if (this.logoutCallback) {
 			this.logoutCallback();
 		}
 		return response.status === 200;
 	};
-	private startLogin = (providerID: string, redirectURI?: string) => {
+	private startLogin = (providerID: AuthProviderId, redirectURI?: string) => {
 		const query = this.queryString({
 			redirect_uri: redirectURI || window.location.toString(),
 		});
