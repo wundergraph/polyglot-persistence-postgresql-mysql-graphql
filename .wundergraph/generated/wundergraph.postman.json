@@ -2,9 +2,9 @@
   "item": [
     {
       "_": {
-        "postman_id": "9a9845e2-bef2-48b2-9b4c-f17087a4fda5"
+        "postman_id": "0e5e2002-be5e-470d-8a86-aa9ad26d7fd3"
       },
-      "id": "9a9845e2-bef2-48b2-9b4c-f17087a4fda5",
+      "id": "0e5e2002-be5e-470d-8a86-aa9ad26d7fd3",
       "name": "Queries",
       "description": {
         "content": "All your query operations",
@@ -12,7 +12,7 @@
       },
       "item": [
         {
-          "id": "da03bd63-292a-4977-baee-6e755e307651",
+          "id": "daf48fe2-c190-4d77-a883-c887f7e65560",
           "name": "Messages",
           "request": {
             "url": {
@@ -44,9 +44,9 @@
     },
     {
       "_": {
-        "postman_id": "8e7fda55-b12f-487b-a8fa-d01f0ef281e2"
+        "postman_id": "91ede3c2-d8b4-4702-b8bb-a5ff60165fa2"
       },
-      "id": "8e7fda55-b12f-487b-a8fa-d01f0ef281e2",
+      "id": "91ede3c2-d8b4-4702-b8bb-a5ff60165fa2",
       "name": "Mutations",
       "description": {
         "content": "All your mutation operations",
@@ -54,7 +54,7 @@
       },
       "item": [
         {
-          "id": "224d8ecf-3678-4b4a-9499-df9fcc93a055",
+          "id": "0e979902-4e6a-4829-a748-a1191401641c",
           "name": "AddMessage",
           "request": {
             "url": {
@@ -102,7 +102,7 @@
     }
   ],
   "info": {
-    "_postman_id": "e82871c4-66bf-4d8e-bff8-12c62014aa36",
+    "_postman_id": "20440264-dddb-4c9f-ae27-46be5da78c64",
     "name": "Wundergraph",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "description": {
