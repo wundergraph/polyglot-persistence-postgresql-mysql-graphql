@@ -1,4 +1,4 @@
-import {} from "./models";
+import { AddMessageInput, AddMessageResponse, MessagesResponse } from "./models";
 
 export const WUNDERGRAPH_S3_ENABLED = false;
 export const WUNDERGRAPH_AUTH_ENABLED = true;
@@ -121,9 +121,9 @@ export class Client {
 	};
 	private extraHeaders?: HeadersInit;
 	private readonly baseURL: string = "http://localhost:9991";
-	private readonly applicationHash: string = "729a2022";
+	private readonly applicationHash: string = "a9efaecf";
 	private readonly applicationPath: string = "api/main";
-	private readonly sdkVersion: string = "0.39.0";
+	private readonly sdkVersion: string = "0.43.0";
 	private csrfToken: string | undefined;
 	private user: User | null;
 	private userListener: UserListener | undefined;
@@ -141,6 +141,43 @@ export class Client {
 				this.userListener(this.user);
 			}
 		}
+	};
+	public query = {
+		Messages: async (options: RequestOptions<never, MessagesResponse>) => {
+			return await this.doFetch<MessagesResponse>({
+				method: "GET",
+				path: "Messages",
+				input: options.input,
+				abortSignal: options.abortSignal,
+			});
+		},
+	};
+	public mutation = {
+		AddMessage: async (options: RequestOptions<AddMessageInput, AddMessageResponse>) => {
+			return await this.doFetch<AddMessageResponse>({
+				method: "POST",
+				path: "AddMessage",
+				input: options.input,
+				abortSignal: options.abortSignal,
+			});
+		},
+	};
+	public liveQuery = {
+		Messages: (
+			options: RequestOptions<never, MessagesResponse>,
+			cb: (response: Response<MessagesResponse>) => void
+		) => {
+			return this.startSubscription<MessagesResponse>(
+				{
+					method: "GET",
+					path: "Messages",
+					input: options.input,
+					abortSignal: options.abortSignal,
+					liveQuery: true,
+				},
+				cb
+			);
+		},
 	};
 	private doFetch = async <T>(fetchConfig: FetchConfig): Promise<Response<T>> => {
 		try {
@@ -225,6 +262,58 @@ export class Client {
 				inflight.forEach((cb) => cb.reject(e));
 			}
 		});
+	};
+	private startSubscription = <T>(fetchConfig: FetchConfig, cb: (response: Response<T>) => void) => {
+		(async () => {
+			try {
+				const params = this.queryString({
+					wg_variables: fetchConfig.input,
+					wg_live: fetchConfig.liveQuery === true ? true : undefined,
+				});
+				const response = await fetch(
+					this.baseURL + "/" + this.applicationPath + "/operations/" + fetchConfig.path + params,
+					{
+						headers: {
+							...this.extraHeaders,
+							"Content-Type": "application/json",
+							"WG-SDK-Version": this.sdkVersion,
+						},
+						method: fetchConfig.method,
+						signal: fetchConfig.abortSignal,
+						credentials: "include",
+						mode: "cors",
+					}
+				);
+				if (response.status === 401) {
+					this.csrfToken = undefined;
+					return;
+				}
+				if (response.status !== 200 || response.body == null) {
+					return;
+				}
+				const reader = response.body.getReader();
+				const decoder = new TextDecoder();
+				let message: string = "";
+				while (true) {
+					const { value, done } = await reader.read();
+					if (done) break;
+					if (!value) continue;
+					message += decoder.decode(value);
+					if (message.endsWith("\n\n")) {
+						cb({
+							status: "ok",
+							body: JSON.parse(message.substring(0, message.length - 2)),
+						});
+						message = "";
+					}
+				}
+			} catch (e: any) {
+				cb({
+					status: "error",
+					message: e,
+				});
+			}
+		})();
 	};
 	private queryString = (input?: Object): string => {
 		if (!input) {

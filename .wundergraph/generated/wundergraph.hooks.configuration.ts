@@ -1,5 +1,6 @@
 import Fastify from "fastify";
-import {} from "./models";
+import { AddMessageInput, AddMessageResponse, MessagesResponse } from "./models";
+import { InternalAddMessageInput } from "./models";
 import { HooksConfiguration } from "@wundergraph/sdk/dist/configure";
 
 declare module "fastify" {
@@ -53,8 +54,27 @@ export interface HooksConfig {
 		mutatingPostAuthentication?: (user: User) => Promise<AuthenticationResponse>;
 		revalidate?: (user: User) => Promise<AuthenticationResponse>;
 	};
-	queries?: {};
-	mutations?: {};
+	queries?: {
+		Messages?: {
+			mockResolve?: (ctx: Context) => Promise<MessagesResponse>;
+			preResolve?: (ctx: Context) => Promise<void>;
+			postResolve?: (ctx: Context, response: MessagesResponse) => Promise<void>;
+			mutatingPostResolve?: (ctx: Context, response: MessagesResponse) => Promise<MessagesResponse>;
+		};
+	};
+	mutations?: {
+		AddMessage?: {
+			mockResolve?: (ctx: Context, input: InternalAddMessageInput) => Promise<AddMessageResponse>;
+			preResolve?: (ctx: Context, input: InternalAddMessageInput) => Promise<void>;
+			mutatingPreResolve?: (ctx: Context, input: InternalAddMessageInput) => Promise<InternalAddMessageInput>;
+			postResolve?: (ctx: Context, input: InternalAddMessageInput, response: AddMessageResponse) => Promise<void>;
+			mutatingPostResolve?: (
+				ctx: Context,
+				input: InternalAddMessageInput,
+				response: AddMessageResponse
+			) => Promise<AddMessageResponse>;
+		};
+	};
 }
 
 export const configureWunderGraphHooks = (config: HooksConfig) => {
@@ -128,6 +148,151 @@ export const configureWunderGraphHooks = (config: HooksConfig) => {
 					}
 				}
 			});
+
+			/**
+			 * Queries
+			 */
+
+			// mock
+			fastify.post("/operation/Messages/mockResolve", async (request, reply) => {
+				reply.type("application/json").code(200);
+				try {
+					const mutated = await config?.queries?.Messages?.mockResolve?.(request.ctx);
+					return { op: "Messages", hook: "mock", response: mutated };
+				} catch (err) {
+					request.log.error(err);
+					reply.code(500);
+					return { op: "Messages", hook: "mock", error: err };
+				}
+			});
+
+			// preResolve
+			fastify.post("/operation/Messages/preResolve", async (request, reply) => {
+				reply.type("application/json").code(200);
+				try {
+					await config?.queries?.Messages?.preResolve?.(request.ctx);
+					return { op: "Messages", hook: "preResolve" };
+				} catch (err) {
+					request.log.error(err);
+					reply.code(500);
+					return { op: "Messages", hook: "preResolve", error: err };
+				}
+			});
+			// postResolve
+			fastify.post<{ Body: { response: MessagesResponse } }>(
+				"/operation/Messages/postResolve",
+				async (request, reply) => {
+					reply.type("application/json").code(200);
+					try {
+						await config?.queries?.Messages?.postResolve?.(request.ctx, request.body.response);
+						return { op: "Messages", hook: "postResolve" };
+					} catch (err) {
+						request.log.error(err);
+						reply.code(500);
+						return { op: "Messages", hook: "postResolve", error: err };
+					}
+				}
+			);
+			// mutatingPostResolve
+			fastify.post<{ Body: { response: MessagesResponse } }>(
+				"/operation/Messages/mutatingPostResolve",
+				async (request, reply) => {
+					reply.type("application/json").code(200);
+					try {
+						const mutated = await config?.queries?.Messages?.mutatingPostResolve?.(request.ctx, request.body.response);
+						return { op: "Messages", hook: "mutatingPostResolve", response: mutated };
+					} catch (err) {
+						request.log.error(err);
+						reply.code(500);
+						return { op: "Messages", hook: "mutatingPostResolve", error: err };
+					}
+				}
+			);
+
+			/**
+			 * Mutations
+			 */
+
+			// mock
+			fastify.post<{ Body: { input: InternalAddMessageInput } }>(
+				"/operation/AddMessage/mockResolve",
+				async (request, reply) => {
+					reply.type("application/json").code(200);
+					try {
+						const mutated = await config?.mutations?.AddMessage?.mockResolve?.(request.ctx, request.body.input);
+						return { op: "AddMessage", hook: "mock", response: mutated };
+					} catch (err) {
+						request.log.error(err);
+						reply.code(500);
+						return { op: "AddMessage", hook: "mock", error: err };
+					}
+				}
+			);
+
+			// preResolve
+			fastify.post<{ Body: { input: InternalAddMessageInput } }>(
+				"/operation/AddMessage/preResolve",
+				async (request, reply) => {
+					reply.type("application/json").code(200);
+					try {
+						await config?.mutations?.AddMessage?.preResolve?.(request.ctx, request.body.input);
+						return { op: "AddMessage", hook: "preResolve" };
+					} catch (err) {
+						request.log.error(err);
+						reply.code(500);
+						return { op: "AddMessage", hook: "preResolve", error: err };
+					}
+				}
+			);
+			// postResolve
+			fastify.post<{ Body: { input: InternalAddMessageInput; response: AddMessageResponse } }>(
+				"/operation/AddMessage/postResolve",
+				async (request, reply) => {
+					reply.type("application/json").code(200);
+					try {
+						await config?.mutations?.AddMessage?.postResolve?.(request.ctx, request.body.input, request.body.response);
+						return { op: "AddMessage", hook: "postResolve" };
+					} catch (err) {
+						request.log.error(err);
+						reply.code(500);
+						return { op: "AddMessage", hook: "postResolve", error: err };
+					}
+				}
+			);
+			// mutatingPreResolve
+			fastify.post<{ Body: { input: InternalAddMessageInput } }>(
+				"/operation/AddMessage/mutatingPreResolve",
+				async (request, reply) => {
+					reply.type("application/json").code(200);
+					try {
+						const mutated = await config?.mutations?.AddMessage?.mutatingPreResolve?.(request.ctx, request.body.input);
+						return { op: "AddMessage", hook: "mutatingPreResolve", input: mutated };
+					} catch (err) {
+						request.log.error(err);
+						reply.code(500);
+						return { op: "AddMessage", hook: "mutatingPreResolve", error: err };
+					}
+				}
+			);
+			// mutatingPostResolve
+			fastify.post<{ Body: { input: InternalAddMessageInput; response: AddMessageResponse } }>(
+				"/operation/AddMessage/mutatingPostResolve",
+				async (request, reply) => {
+					reply.type("application/json").code(200);
+					try {
+						const mutated = await config?.mutations?.AddMessage?.mutatingPostResolve?.(
+							request.ctx,
+							request.body.input,
+							request.body.response
+						);
+						return { op: "AddMessage", hook: "mutatingPostResolve", response: mutated };
+					} catch (err) {
+						request.log.error(err);
+						reply.code(500);
+						return { op: "AddMessage", hook: "mutatingPostResolve", error: err };
+					}
+				}
+			);
 
 			fastify.listen(9992, (err, address) => {
 				if (err) {

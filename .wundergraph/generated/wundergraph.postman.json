@@ -1,0 +1,113 @@
+{
+  "item": [
+    {
+      "_": {
+        "postman_id": "9a9845e2-bef2-48b2-9b4c-f17087a4fda5"
+      },
+      "id": "9a9845e2-bef2-48b2-9b4c-f17087a4fda5",
+      "name": "Queries",
+      "description": {
+        "content": "All your query operations",
+        "type": "text/plain"
+      },
+      "item": [
+        {
+          "id": "da03bd63-292a-4977-baee-6e755e307651",
+          "name": "Messages",
+          "request": {
+            "url": {
+              "path": [
+                "api",
+                "main",
+                "operations",
+                "Messages"
+              ],
+              "host": [
+                "{{apiBaseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET"
+          },
+          "response": [],
+          "event": []
+        }
+      ],
+      "event": []
+    },
+    {
+      "_": {
+        "postman_id": "8e7fda55-b12f-487b-a8fa-d01f0ef281e2"
+      },
+      "id": "8e7fda55-b12f-487b-a8fa-d01f0ef281e2",
+      "name": "Mutations",
+      "description": {
+        "content": "All your mutation operations",
+        "type": "text/plain"
+      },
+      "item": [
+        {
+          "id": "224d8ecf-3678-4b4a-9499-df9fcc93a055",
+          "name": "AddMessage",
+          "request": {
+            "url": {
+              "path": [
+                "api",
+                "main",
+                "operations",
+                "AddMessage"
+              ],
+              "host": [
+                "{{apiBaseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "POST",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "Type string, Optional",
+                    "type": "text/plain"
+                  },
+                  "key": "message",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": []
+        }
+      ],
+      "event": []
+    }
+  ],
+  "event": [],
+  "variable": [
+    {
+      "type": "string",
+      "value": "http://localhost:9991",
+      "key": "apiBaseUrl"
+    }
+  ],
+  "info": {
+    "_postman_id": "e82871c4-66bf-4d8e-bff8-12c62014aa36",
+    "name": "Wundergraph",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": {
+      "content": "Your Wundergraph collection",
+      "type": "text/plain"
+    }
+  }
+}

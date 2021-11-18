@@ -216,7 +216,7 @@ input messagesWhereInput {
   OR: [messagesWhereInput]
   NOT: messagesWhereInput
   id: IntFilter
-  users_id: IntFilter
+  user_id: IntFilter
   message: StringFilter
   users: UsersRelationFilter
 }
@@ -226,10 +226,22 @@ enum SortOrder {
   desc
 }
 
-input messagesOrderByInput {
+input messagesOrderByRelationAggregateInput {
+  _count: SortOrder
+}
+
+input usersOrderByWithRelationInput {
   id: SortOrder
-  users_id: SortOrder
+  email: SortOrder
+  name: SortOrder
+  messages: messagesOrderByRelationAggregateInput
+}
+
+input messagesOrderByWithRelationInput {
+  id: SortOrder
+  user_id: SortOrder
   message: SortOrder
+  users: usersOrderByWithRelationInput
 }
 
 input messagesWhereUniqueInput {
@@ -238,58 +250,103 @@ input messagesWhereUniqueInput {
 
 enum MessagesScalarFieldEnum {
   id
-  users_id
+  user_id
   message
+}
+
+type UsersCountOutputType {
+  messages: Int!
 }
 
 type users {
   id: Int!
   email: String!
   name: String!
-  messages(where: messagesWhereInput, orderBy: [messagesOrderByInput], cursor: messagesWhereUniqueInput, take: Int, skip: Int, distinct: [MessagesScalarFieldEnum]): [messages]
+  messages(where: messagesWhereInput, orderBy: [messagesOrderByWithRelationInput], cursor: messagesWhereUniqueInput, take: Int, skip: Int, distinct: [MessagesScalarFieldEnum]): [messages]
+  _count: UsersCountOutputType
 }
 
 type messages {
   id: Int!
-  users_id: Int!
+  user_id: Int!
   message: String!
   users: users!
 }
 
 type MessagesCountAggregateOutputType {
   id: Int!
-  users_id: Int!
+  user_id: Int!
   message: Int!
+  _all: Int!
 }
 
 type MessagesAvgAggregateOutputType {
   id: Float
-  users_id: Float
+  user_id: Float
 }
 
 type MessagesSumAggregateOutputType {
   id: Int
-  users_id: Int
+  user_id: Int
 }
 
 type MessagesMinAggregateOutputType {
   id: Int
-  users_id: Int
+  user_id: Int
   message: String
 }
 
 type MessagesMaxAggregateOutputType {
   id: Int
-  users_id: Int
+  user_id: Int
   message: String
 }
 
 type AggregateMessages {
-  count: MessagesCountAggregateOutputType
-  avg: MessagesAvgAggregateOutputType
-  sum: MessagesSumAggregateOutputType
-  min: MessagesMinAggregateOutputType
-  max: MessagesMaxAggregateOutputType
+  _count: MessagesCountAggregateOutputType
+  _avg: MessagesAvgAggregateOutputType
+  _sum: MessagesSumAggregateOutputType
+  _min: MessagesMinAggregateOutputType
+  _max: MessagesMaxAggregateOutputType
+}
+
+input messagesCountOrderByAggregateInput {
+  id: SortOrder
+  user_id: SortOrder
+  message: SortOrder
+}
+
+input messagesAvgOrderByAggregateInput {
+  id: SortOrder
+  user_id: SortOrder
+}
+
+input messagesMaxOrderByAggregateInput {
+  id: SortOrder
+  user_id: SortOrder
+  message: SortOrder
+}
+
+input messagesMinOrderByAggregateInput {
+  id: SortOrder
+  user_id: SortOrder
+  message: SortOrder
+}
+
+input messagesSumOrderByAggregateInput {
+  id: SortOrder
+  user_id: SortOrder
+}
+
+input messagesOrderByWithAggregationInput {
+  id: SortOrder
+  user_id: SortOrder
+  message: SortOrder
+  _count: messagesCountOrderByAggregateInput
+  _avg: messagesAvgOrderByAggregateInput
+  _max: messagesMaxOrderByAggregateInput
+  _min: messagesMinOrderByAggregateInput
+  _sum: messagesSumOrderByAggregateInput
 }
 
 input NestedFloatFilter {
@@ -313,15 +370,10 @@ input NestedIntWithAggregatesFilter {
   gte: Int
   not: NestedIntWithAggregatesFilter
   _count: NestedIntFilter
-  count: NestedIntFilter
   _avg: NestedFloatFilter
-  avg: NestedFloatFilter
   _sum: NestedIntFilter
-  sum: NestedIntFilter
   _min: NestedIntFilter
-  min: NestedIntFilter
   _max: NestedIntFilter
-  max: NestedIntFilter
 }
 
 input IntWithAggregatesFilter {
@@ -334,15 +386,10 @@ input IntWithAggregatesFilter {
   gte: Int
   not: NestedIntWithAggregatesFilter
   _count: NestedIntFilter
-  count: NestedIntFilter
   _avg: NestedFloatFilter
-  avg: NestedFloatFilter
   _sum: NestedIntFilter
-  sum: NestedIntFilter
   _min: NestedIntFilter
-  min: NestedIntFilter
   _max: NestedIntFilter
-  max: NestedIntFilter
 }
 
 input NestedStringWithAggregatesFilter {
@@ -358,11 +405,8 @@ input NestedStringWithAggregatesFilter {
   endsWith: String
   not: NestedStringWithAggregatesFilter
   _count: NestedIntFilter
-  count: NestedIntFilter
   _min: NestedStringFilter
-  min: NestedStringFilter
   _max: NestedStringFilter
-  max: NestedStringFilter
 }
 
 input StringWithAggregatesFilter {
@@ -379,11 +423,8 @@ input StringWithAggregatesFilter {
   mode: QueryMode
   not: NestedStringWithAggregatesFilter
   _count: NestedIntFilter
-  count: NestedIntFilter
   _min: NestedStringFilter
-  min: NestedStringFilter
   _max: NestedStringFilter
-  max: NestedStringFilter
 }
 
 input messagesScalarWhereWithAggregatesInput {
@@ -391,20 +432,19 @@ input messagesScalarWhereWithAggregatesInput {
   OR: [messagesScalarWhereWithAggregatesInput]
   NOT: messagesScalarWhereWithAggregatesInput
   id: IntWithAggregatesFilter
-  users_id: IntWithAggregatesFilter
+  user_id: IntWithAggregatesFilter
   message: StringWithAggregatesFilter
 }
 
 type MessagesGroupByOutputType {
   id: Int!
-  users_id: Int!
+  user_id: Int!
   message: String!
-}
-
-input usersOrderByInput {
-  id: SortOrder
-  email: SortOrder
-  name: SortOrder
+  _count: MessagesCountAggregateOutputType
+  _avg: MessagesAvgAggregateOutputType
+  _sum: MessagesSumAggregateOutputType
+  _min: MessagesMinAggregateOutputType
+  _max: MessagesMaxAggregateOutputType
 }
 
 input usersWhereUniqueInput {
@@ -422,6 +462,7 @@ type UsersCountAggregateOutputType {
   id: Int!
   email: Int!
   name: Int!
+  _all: Int!
 }
 
 type UsersAvgAggregateOutputType {
@@ -445,11 +486,48 @@ type UsersMaxAggregateOutputType {
 }
 
 type AggregateUsers {
-  count: UsersCountAggregateOutputType
-  avg: UsersAvgAggregateOutputType
-  sum: UsersSumAggregateOutputType
-  min: UsersMinAggregateOutputType
-  max: UsersMaxAggregateOutputType
+  _count: UsersCountAggregateOutputType
+  _avg: UsersAvgAggregateOutputType
+  _sum: UsersSumAggregateOutputType
+  _min: UsersMinAggregateOutputType
+  _max: UsersMaxAggregateOutputType
+}
+
+input usersCountOrderByAggregateInput {
+  id: SortOrder
+  email: SortOrder
+  name: SortOrder
+}
+
+input usersAvgOrderByAggregateInput {
+  id: SortOrder
+}
+
+input usersMaxOrderByAggregateInput {
+  id: SortOrder
+  email: SortOrder
+  name: SortOrder
+}
+
+input usersMinOrderByAggregateInput {
+  id: SortOrder
+  email: SortOrder
+  name: SortOrder
+}
+
+input usersSumOrderByAggregateInput {
+  id: SortOrder
+}
+
+input usersOrderByWithAggregationInput {
+  id: SortOrder
+  email: SortOrder
+  name: SortOrder
+  _count: usersCountOrderByAggregateInput
+  _avg: usersAvgOrderByAggregateInput
+  _max: usersMaxOrderByAggregateInput
+  _min: usersMinOrderByAggregateInput
+  _sum: usersSumOrderByAggregateInput
 }
 
 input usersScalarWhereWithAggregatesInput {
@@ -465,18 +543,23 @@ type UsersGroupByOutputType {
   id: Int!
   email: String!
   name: String!
+  _count: UsersCountAggregateOutputType
+  _avg: UsersAvgAggregateOutputType
+  _sum: UsersSumAggregateOutputType
+  _min: UsersMinAggregateOutputType
+  _max: UsersMaxAggregateOutputType
 }
 
 type Query {
-  findFirstmessages(where: messagesWhereInput, orderBy: [messagesOrderByInput], cursor: messagesWhereUniqueInput, take: Int, skip: Int, distinct: [MessagesScalarFieldEnum]): messages
-  findManymessages(where: messagesWhereInput, orderBy: [messagesOrderByInput], cursor: messagesWhereUniqueInput, take: Int, skip: Int, distinct: [MessagesScalarFieldEnum]): [messages]!
-  aggregatemessages(where: messagesWhereInput, orderBy: [messagesOrderByInput], cursor: messagesWhereUniqueInput, take: Int, skip: Int): AggregateMessages!
-  groupBymessages(where: messagesWhereInput, orderBy: [messagesOrderByInput], by: [MessagesScalarFieldEnum]!, having: messagesScalarWhereWithAggregatesInput, take: Int, skip: Int): [MessagesGroupByOutputType]!
+  findFirstmessages(where: messagesWhereInput, orderBy: [messagesOrderByWithRelationInput], cursor: messagesWhereUniqueInput, take: Int, skip: Int, distinct: [MessagesScalarFieldEnum]): messages
+  findManymessages(where: messagesWhereInput, orderBy: [messagesOrderByWithRelationInput], cursor: messagesWhereUniqueInput, take: Int, skip: Int, distinct: [MessagesScalarFieldEnum]): [messages]!
+  aggregatemessages(where: messagesWhereInput, orderBy: [messagesOrderByWithRelationInput], cursor: messagesWhereUniqueInput, take: Int, skip: Int): AggregateMessages!
+  groupBymessages(where: messagesWhereInput, orderBy: [messagesOrderByWithAggregationInput], by: [MessagesScalarFieldEnum]!, having: messagesScalarWhereWithAggregatesInput, take: Int, skip: Int): [MessagesGroupByOutputType]!
   findUniquemessages(where: messagesWhereUniqueInput!): messages
-  findFirstusers(where: usersWhereInput, orderBy: [usersOrderByInput], cursor: usersWhereUniqueInput, take: Int, skip: Int, distinct: [UsersScalarFieldEnum]): users
-  findManyusers(where: usersWhereInput, orderBy: [usersOrderByInput], cursor: usersWhereUniqueInput, take: Int, skip: Int, distinct: [UsersScalarFieldEnum]): [users]!
-  aggregateusers(where: usersWhereInput, orderBy: [usersOrderByInput], cursor: usersWhereUniqueInput, take: Int, skip: Int): AggregateUsers!
-  groupByusers(where: usersWhereInput, orderBy: [usersOrderByInput], by: [UsersScalarFieldEnum]!, having: usersScalarWhereWithAggregatesInput, take: Int, skip: Int): [UsersGroupByOutputType]!
+  findFirstusers(where: usersWhereInput, orderBy: [usersOrderByWithRelationInput], cursor: usersWhereUniqueInput, take: Int, skip: Int, distinct: [UsersScalarFieldEnum]): users
+  findManyusers(where: usersWhereInput, orderBy: [usersOrderByWithRelationInput], cursor: usersWhereUniqueInput, take: Int, skip: Int, distinct: [UsersScalarFieldEnum]): [users]!
+  aggregateusers(where: usersWhereInput, orderBy: [usersOrderByWithRelationInput], cursor: usersWhereUniqueInput, take: Int, skip: Int): AggregateUsers!
+  groupByusers(where: usersWhereInput, orderBy: [usersOrderByWithAggregationInput], by: [UsersScalarFieldEnum]!, having: usersScalarWhereWithAggregatesInput, take: Int, skip: Int): [UsersGroupByOutputType]!
   findUniqueusers(where: usersWhereUniqueInput!): users
 }
 
@@ -530,7 +613,7 @@ input messagesUpdateInput {
 
 input messagesCreateManyInput {
   id: Int
-  users_id: Int!
+  user_id: Int!
   message: String!
 }
 
@@ -594,7 +677,7 @@ input messagesScalarWhereInput {
   OR: [messagesScalarWhereInput]
   NOT: messagesScalarWhereInput
   id: IntFilter
-  users_id: IntFilter
+  user_id: IntFilter
   message: StringFilter
 }
 

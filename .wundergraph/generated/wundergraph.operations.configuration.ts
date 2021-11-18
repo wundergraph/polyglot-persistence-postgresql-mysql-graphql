@@ -12,7 +12,10 @@ export interface OperationsConfiguration {
 
 	// custom allows you to override settings for each individual operation
 	// the input config is the default config + the query/mutation/subscription extra config
-	custom?: {};
+	custom?: {
+		AddMessage?: CustomizeMutation;
+		Messages?: CustomizeQuery;
+	};
 }
 
 export interface BaseOperationConfiguration {
