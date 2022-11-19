@@ -1,5 +1,4 @@
 import {
-    Application,
     authProviders,
     configureWunderGraphApplication,
     cors,
