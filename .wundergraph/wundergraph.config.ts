@@ -1,5 +1,4 @@
 import {
-    Application,
     authProviders,
     configureWunderGraphApplication,
     cors,
@@ -17,17 +16,9 @@ const db = introspect.postgresql({
     databaseURL: "mysql://admin:admin@localhost:54333/example",
 });*/
 
-const myApplication = new Application({
-    name: "app",
-    apis: [
-        db,
-    ],
-})
-
-
 // configureWunderGraph emits the configuration
 configureWunderGraphApplication({
-    application: myApplication,
+    apis: [db],
     codeGenerators: [
         {
             templates: [
